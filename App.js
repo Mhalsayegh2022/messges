@@ -1,14 +1,32 @@
 import { AppLoading } from 'expo';
 import { Asset } from 'expo-asset';
 import * as Font from 'expo-font';
-import React, { useState } from 'react';
-import { Platform, StatusBar, StyleSheet, View } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Platform, StatusBar, StyleSheet, View, TextInput, Button } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
 import AppNavigator from './navigation/AppNavigator';
+import 'firebase/auth';
+import firebase from 'firebase/app';
 
 export default function App(props) {
   const [isLoadingComplete, setLoadingComplete] = useState(false);
+
+//adding new const for Authorization and Logging in + handles
+const [user, setUser] = useState(null);
+const [email, setEmail] = useState("");
+const [password, setPassword] = useState("");
+
+useEffect(() => {
+ return firebase.auth().onAuthStateChanged(setUser);
+  }, []) ;
+ 
+const handleRegister = () => {
+  firebase.auth().createUserWithEmailAndPassword(email, password)
+};
+
+const handleLogin = () => {
+  firebase.auth().createUserWithEmailAndPassword(email, password)
+};
 
   if (!isLoadingComplete && !props.skipLoadingScreen) {
     return (
@@ -18,7 +36,19 @@ export default function App(props) {
         onFinish={() => handleFinishLoading(setLoadingComplete)}
       />
     );
-  } else {
+  } else if(!user) {
+    return(
+      <View style={styles.container}>
+      <TextInput style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setEmail} value={email} placeholder="Email"/>
+      <TextInput style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setPassword} value={password} placeholder="Password"/>
+
+      <Button title="Register" onPress={() => handleRegister()}></Button>
+      <Button title="Login" onPress={() => handleLogin()}></Button>
+      </View>
+    );
+    }
+    else {
+      console.log("user", user);
     return (
       <View style={styles.container}>
         {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
@@ -58,5 +88,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    paddingTop: 60
+  },
+  contentContainer: {
+    paddingTop: 30,
+  },
+  welcomeContainer: {
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 20,
   },
 });

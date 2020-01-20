@@ -11,10 +11,10 @@ import {
   TextInput,
   Button
 } from 'react-native';
-
 import { MonoText } from '../components/StyledText';
-
 import db from '../db';
+import 'firebase/auth';
+import firebase from 'firebase/app';
 
 db.collection("messages").onSnapshot(querySnapshot => {
   var messages = [];
@@ -45,31 +45,29 @@ export default function HomeScreen() {
     });
   }, []);
 
+  useEffect(() => {
+console.log('auth', firebase.auth())
+  },[]);
+
   const handleDelete = message => {
     db.collection("messages").doc(message.id).delete()
   };
 
   const handleSend = () => {
+    const from =firebase.auth().currentUser.uid
     if (id) {
       db.collection("messages").doc(id).update({ from, to, text })
     } else {
       db.collection("messages").add({
         from,
-        to,
-        text
-      }
-
-      );
-    }
-
-    setFrom("")
-    setTo("")
+        to, text
+      });}
+   setTo("");
     setText("")
     setId("")
   };
 
   const handleEdit = message => {
-    setFrom(message.from)
     setTo(message.to)
     setText(message.text)
     setId(message.id)
@@ -95,7 +93,7 @@ export default function HomeScreen() {
             ))}
 
       </ScrollView>
-      <TextInput style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setFrom} value={from} placeholder="From"/>
+      
       <TextInput style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setTo} value={to} placeholder="To" />
       <TextInput style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setText} value={text} placeholder="Text"/>
 
