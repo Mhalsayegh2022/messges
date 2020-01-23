@@ -15,6 +15,7 @@ import { MonoText } from '../components/StyledText';
 import db from '../db';
 import 'firebase/auth';
 import firebase from 'firebase/app';
+import Message from './Message.js';
 
 db.collection("messages").onSnapshot(querySnapshot => {
   var messages = [];
@@ -28,7 +29,7 @@ export default function HomeScreen() {
 
   //state
   const [messages, setMessages] = useState([]);
-  const [from, setFrom] = React.useState("");
+  
   const [to, setTo] = React.useState("");
   const [text, setText] = React.useState("");
   const [id, setId] = React.useState("");
@@ -72,32 +73,29 @@ console.log('auth', firebase.auth())
     setText(message.text)
     setId(message.id)
   };
+
+  const handleLogOut = () => {
+    firebase.auth().signOut()
+  }
   return (
     <View style={styles.container}>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.contentContainer}>
-
+        contentContainerStyle={styles.contentContainer} 
+        keyboardshouldPresistTaps="always" >
+          
         {
-          messages.map(
-            (message, i) => (
-              <View style={styles.getStartedText} key={i}>
+          messages.map((message, i) => (
+              
+                <Message key={i} message ={message} handleEdit={handleEdit}/>
+          ))}
+                </ScrollView>
 
-                <Text>{message.id} - {message.text}</Text>
-
-                <Button title="Edit"
-                  onPress={() => handleEdit(message)} />
-                <Button title="Delete"
-                  onPress={() => handleDelete(message)} />
-              </View>
-            ))}
-
-      </ScrollView>
-      
-      <TextInput style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setTo} value={to} placeholder="To" />
+           <TextInput style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setTo} value={to} placeholder="To" />
       <TextInput style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setText} value={text} placeholder="Text"/>
-
-      <Button title="Create" onPress={() => handleSend()}></Button>
+     
+      <Button title="Send" onPress={handleSend}></Button>
+      <Button  style={{borderWidth: 1, borderColor:'gray', height:40}} title="Log out" onPress={handleLogOut}></Button>
     </View>
   );
 }
