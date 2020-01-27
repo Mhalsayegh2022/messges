@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ExpoConfigView } from '@expo/samples';
 import { StyleSheet, View, Text, Button } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
-import firebase from 'firebase/app'
+import firebase from 'firebase/app';
 import 'firebase/auth';
+import 'firebase/firestore';
 import db from '../db';
 
 export default function SettingsScreen() {
@@ -13,9 +13,9 @@ export default function SettingsScreen() {
 
   const handleSet = async () => {
     const info = await db.collection('users').doc(firebase.auth().currentUser.uid).get()
-    setDisplayName(info.displayName)
-    setPhotoURL(info.photoURL)
-  }
+    setDisplayName(info.displayName);
+    setPhotoURL(info.photoURL);
+  };
 
   useEffect(() => {
     // setDisplayName(firebase.auth().currentUser.displayName);
@@ -25,9 +25,14 @@ export default function SettingsScreen() {
 
   const handleSave = () => {
     //firebase.auth().currentUser.updateProfile({displayName, photoURL})
-    db.collection('users').doc(firebase.auth().currentUser.uid.update({ displayName, photoURL }));
+    db.collection('users').doc(firebase.auth().currentUser.uid).set({displayName,photoURL});
   };
-
+const handlePickImge= () => {
+  //show camera roll, allow user to select, set photoURL
+  //-use firebase storage
+  //-upload selected image to default bucket, naming with uid
+  //- use get the url and set the photoURL
+}
   return (
     <View style={styles.StyleSheet}>
 
@@ -38,10 +43,10 @@ export default function SettingsScreen() {
 
       <TextInput style={{ height: 40, borderColor: "gray", borderWidth: 1 }}
         onChangeText={setPhotoURL}
-        placeholder="Photo URL"
+        placeholder="PhotoURL"
         value={photoURL} />
 
-      <Button title="Save" onPress={handleSave}></Button>
+      <Button title="Save" onPress={() => handleSave()}></Button>
 
     </View>
   )

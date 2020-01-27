@@ -1,4 +1,4 @@
-import * as WebBrowser from 'expo-web-browser';
+
 import React, { useState, useEffect } from 'react';
 import {
   Image,
@@ -6,9 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
-  View,
-  TextInput,
   Button
 } from 'react-native';
 import { MonoText } from '../components/StyledText';
@@ -18,13 +15,12 @@ import firebase from 'firebase/app';
 import 'firebase/database';
 
 export default ({message, handleEdit}) => {
-    const [from,setFrom] = useState(null);
+    const [user, setUser] = useState(null);
  
-   const handleSet = async () => {
-        const info = await db.collection('users').doc(message.from).get(snapShot => {
-            console.log("message.from info", snapShot.data());
-        });
-          
+   const handleUser = async () => {
+        const snap = await db.collection(`users`).doc(message.from).get();
+            console.log("message.from info", snap.data());
+            setUser(snap.data());  
       };
  
     useEffect(() => {
@@ -34,7 +30,7 @@ export default ({message, handleEdit}) => {
         // firebase.database().ref(`users/${message.from}`).once("value", data => {
         //     console.log('message.from data' ,data);
         // });
-        handleSet()
+        handleUser();
     }, []);
 
     const handleDelete = message => {
@@ -46,15 +42,16 @@ export default ({message, handleEdit}) => {
     //     setId(message.id);
     // };
     return(
-        <>
+      user && (<>
+        <Image style={{width:50, height:50}} source={{uri: user.photoURL}}/>
         <Text style={styles.getStartedText}>
              {message.from}-{message.to} - {message.text}
             </Text>
              <Button title="Edit" onPress={() => handleEdit(message)} />
              <Button title="Delete" onPress={() => handleDelete(message)} />
              </>
+      )
     );
-
 };
 
 const styles = StyleSheet.create({

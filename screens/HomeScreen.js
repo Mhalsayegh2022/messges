@@ -17,13 +17,6 @@ import 'firebase/auth';
 import firebase from 'firebase/app';
 import Message from './Message.js';
 
-db.collection("messages").onSnapshot(querySnapshot => {
-  var messages = [];
-  querySnapshot.forEach(doc => {
-    messages.push(doc.data().text);
-  });
-  console.log("Current messages: ", messages.join(","));
-});
 
 export default function HomeScreen() {
 
@@ -35,27 +28,27 @@ export default function HomeScreen() {
   const [id, setId] = React.useState("");
 
   // we have to use useEffect
-  useEffect(() => {
+  useEffect(()=> {
     db.collection("messages").onSnapshot(querySnapshot => {
-      var messages = [];
-      querySnapshot.forEach(doc => {
-        messages.push({ id: doc.id, ...doc.data() });
-      });
-      console.log("  Current messages: ", messages.join(", "));
-      setMessages([...messages]);
+    var messages = [];
+    querySnapshot.forEach(doc => {
+      messages.push({id:doc.id, ...doc.data()});
     });
-  }, []);
-
-  useEffect(() => {
-console.log('auth', firebase.auth())
+    console.log("Current messages: ", messages);
+    setMessages([...messages]);
+  });
   },[]);
+
+//   useEffect(() => {
+// console.log('auth', firebase.auth())
+//   },[]);
 
   const handleDelete = message => {
     db.collection("messages").doc(message.id).delete()
   };
 
   const handleSend = () => {
-    const from =firebase.auth().currentUser.uid
+    const from =firebase.auth().currentUser.uid;
     if (id) {
       db.collection("messages").doc(id).update({ from, to, text })
     } else {
@@ -94,8 +87,8 @@ console.log('auth', firebase.auth())
            <TextInput style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setTo} value={to} placeholder="To" />
       <TextInput style={{ height: 40, borderColor: 'gray', borderWidth: 1 }} onChangeText={setText} value={text} placeholder="Text"/>
      
-      <Button title="Send" onPress={handleSend}></Button>
-      <Button  style={{borderWidth: 1, borderColor:'gray', height:40}} title="Log out" onPress={handleLogOut}></Button>
+      <Button title="Send" onPress={() =>handleSend()}></Button>
+      <Button  style={{borderWidth: 1, borderColor:'gray', height:40}} title="Log out" onPress={() =>handleLogOut()}></Button>
     </View>
   );
 }
