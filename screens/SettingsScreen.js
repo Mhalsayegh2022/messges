@@ -4,13 +4,20 @@ import { TextInput } from 'react-native-gesture-handler';
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
+import "firebase/storage";
 import db from '../db';
+import * as ImagePicker from 'expo-image-picker';
+import * as Permissions from 'expo-permissions';
 
 export default function SettingsScreen() {
-
+const [hasCameraPermission, setHasCameraPermission] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [photoURL, setPhotoURL] = useState("");
 
+const askPermission = async ()=> {
+const {status} = await ImagePicker.requestCameraRollPermissionsAsync();
+setHasCameraRollPermission(status === 'granted');
+  };
   const handleSet = async () => {
     const info = await db.collection('users').doc(firebase.auth().currentUser.uid).get()
     setDisplayName(info.displayName);
@@ -20,19 +27,60 @@ export default function SettingsScreen() {
   useEffect(() => {
     // setDisplayName(firebase.auth().currentUser.displayName);
     // setPhotoURL(firebase.auth().currentUser.photoURL);
-    handleSet()
+    askPermission();
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if(uri !== ""){
+    const response = await fetch(result.uri);
+    console.log('result', JSON.stringify(response));
+    const blob = await response.blob();
+    console.log('put result', puResult);
+    const puResult = await firebase.storage().ref().child(firebase.auth().currentUser.uid).put(blob);
+  //-upload selected image to default bucket, naming with uid
+  //- use get the url and set the photoURL
+
+  const url = await firebase.storage().ref().child(firebase.auth().currentUser.uid).getDownloadURL();
+  console.log("downlaod url", url);
+  setPhotoURL(url);
+    }
     //firebase.auth().currentUser.updateProfile({displayName, photoURL})
     db.collection('users').doc(firebase.auth().currentUser.uid).set({displayName,photoURL});
+    
   };
-const handlePickImge= () => {
+const handlePickImge = async () => {
   //show camera roll, allow user to select, set photoURL
   //-use firebase storage
   //-upload selected image to default bucket, naming with uid
   //- use get the url and set the photoURL
-}
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.All,
+    allowsEditing: true,
+    aspect: [4, 3],
+    quality: 1
+  });
+
+  console.log(result);
+
+  if (!result.cancelled) {
+    console.log('not cancelled', result.uri);
+    setUri(result.uri);
+    //-use firebase storage
+  //   const response = await fetch(result.uri);
+  //   console.log('result', JSON.stringify(response));
+  //   const blob = await response.blob();
+  //   console.log('put result', puResult);
+  //   const puResult = await firebase.storage().ref().child(firebase.auth().currentUser.uid).put(blob);
+  // //-upload selected image to default bucket, naming with uid
+  // //- use get the url and set the photoURL
+
+  // const url = await firebase.storage().ref().child(firebase.auth().currentUser.uid).getDownloadURL();
+  // console.log("downlaod url", url);
+  // setPhotoURL(url);
+ } };
+
+
   return (
     <View style={styles.StyleSheet}>
 
@@ -46,8 +94,9 @@ const handlePickImge= () => {
         placeholder="PhotoURL"
         value={photoURL} />
 
-      <Button title="Save" onPress={() => handleSave()}></Button>
-
+        <Button title="Pick an Image" onPress={() => handlePickImge()}/>
+      <Button title="Save" onPress={() => handleSave()}/>
+    
     </View>
   )
 }

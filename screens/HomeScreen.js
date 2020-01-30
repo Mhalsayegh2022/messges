@@ -30,7 +30,7 @@ export default function HomeScreen() {
   // we have to use useEffect
   useEffect(()=> {
     db.collection("messages").onSnapshot(querySnapshot => {
-    var messages = [];
+    const messages = [];
     querySnapshot.forEach(doc => {
       messages.push({id:doc.id, ...doc.data()});
     });
@@ -77,10 +77,8 @@ export default function HomeScreen() {
         contentContainerStyle={styles.contentContainer} 
         keyboardshouldPresistTaps="always" >
           
-        {
-          messages.map((message, i) => (
-              
-                <Message key={i} message ={message} handleEdit={handleEdit}/>
+        {messages.map((message,i) => (             
+                <Message key={i} message={message} handleEdit={handleEdit}/>
           ))}
                 </ScrollView>
 
