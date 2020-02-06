@@ -6,7 +6,8 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  Button
+  Button,
+  View
 } from 'react-native';
 import { MonoText } from '../components/StyledText';
 import db from '../db';

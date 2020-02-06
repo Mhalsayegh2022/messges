@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, Button } from 'react-native';
+import { StyleSheet, View, Text, Button, Image, Dimensions } from 'react-native';
 import { TextInput } from 'react-native-gesture-handler';
 import firebase from 'firebase/app';
 import 'firebase/auth';
@@ -9,19 +9,17 @@ import db from '../db';
 import * as ImagePicker from 'expo-image-picker';
 import * as Permissions from 'expo-permissions';
 
+import MapView from 'react-native-maps';
+
 export default function SettingsScreen() {
-const [hasCameraPermission, setHasCameraPermission] = useState(false);
+  const [hasCameraRollPermission, setHasCameraRollPermission] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [photoURL, setPhotoURL] = useState("");
+  const [uri, setUri] = useState("");
 
-const askPermission = async ()=> {
-const {status} = await ImagePicker.requestCameraRollPermissionsAsync();
-setHasCameraRollPermission(status === 'granted');
-  };
-  const handleSet = async () => {
-    const info = await db.collection('users').doc(firebase.auth().currentUser.uid).get()
-    setDisplayName(info.displayName);
-    setPhotoURL(info.photoURL);
+  const askPermission = async () => {
+    const { status } = await ImagePicker.requestCameraRollPermissionsAsync();
+    setHasCameraRollPermission(status === 'granted');
   };
 
   useEffect(() => {
@@ -30,73 +28,102 @@ setHasCameraRollPermission(status === 'granted');
     askPermission();
   }, []);
 
-  const handleSave = async () => {
-    if(uri !== ""){
-    const response = await fetch(result.uri);
-    console.log('result', JSON.stringify(response));
-    const blob = await response.blob();
-    console.log('put result', puResult);
-    const puResult = await firebase.storage().ref().child(firebase.auth().currentUser.uid).put(blob);
-  //-upload selected image to default bucket, naming with uid
-  //- use get the url and set the photoURL
 
-  const url = await firebase.storage().ref().child(firebase.auth().currentUser.uid).getDownloadURL();
-  console.log("downlaod url", url);
-  setPhotoURL(url);
+  const handleSet = async () => {
+    const snap = await db.collection('users').doc(firebase.auth().currentUser.uid).get();
+    setDisplayName(snap.data().displayName);
+    setPhotoURL(snap.data().photoURL);
+  };
+
+  useEffect(() =>{
+    handleSet();
+  }, []);
+  
+  const handleSave = async () => {
+    //use firebase storage
+    if (uri !== "") {
+      const response = await fetch(uri);
+      //console.log('result', JSON.stringify(response));
+
+      const blob = await response.blob();
+
+      
+      const putResult = await firebase.storage().ref().child(firebase.auth().currentUser.uid).put(blob);
+      //-upload selected image to default bucket, naming with uid
+      //- use get the url and set the photoURL
+//console.log('put result', putResult);
+      const url = await firebase.storage().ref().child(firebase.auth().currentUser.uid)
+        .getDownloadURL();
+      //console.log("downlaod url", url);
+      setPhotoURL(url);
     }
     //firebase.auth().currentUser.updateProfile({displayName, photoURL})
-    db.collection('users').doc(firebase.auth().currentUser.uid).set({displayName,photoURL});
-    
+    db.collection('users').doc(firebase.auth().currentUser.uid).set({ displayName, photoURL });
+
   };
-const handlePickImge = async () => {
-  //show camera roll, allow user to select, set photoURL
-  //-use firebase storage
-  //-upload selected image to default bucket, naming with uid
-  //- use get the url and set the photoURL
 
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.All,
-    allowsEditing: true,
-    aspect: [4, 3],
-    quality: 1
-  });
-
-  console.log(result);
-
-  if (!result.cancelled) {
-    console.log('not cancelled', result.uri);
-    setUri(result.uri);
+  const handlePickImge = async () => {
+    //show camera roll, allow user to select, set photoURL
     //-use firebase storage
-  //   const response = await fetch(result.uri);
-  //   console.log('result', JSON.stringify(response));
-  //   const blob = await response.blob();
-  //   console.log('put result', puResult);
-  //   const puResult = await firebase.storage().ref().child(firebase.auth().currentUser.uid).put(blob);
-  // //-upload selected image to default bucket, naming with uid
-  // //- use get the url and set the photoURL
+    //-upload selected image to default bucket, naming with uid
+    //- use get the url and set the photoURL
 
-  // const url = await firebase.storage().ref().child(firebase.auth().currentUser.uid).getDownloadURL();
-  // console.log("downlaod url", url);
-  // setPhotoURL(url);
- } };
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.All,
+      allowsEditing: true,
+      aspect: [4,3],
+      quality: 1
+    });
+
+    if (!result.cancelled) {
+      console.log('not cancelled', result.uri);
+      setUri(result.uri);
+      //-use firebase storage
+      //   const response = await fetch(result.uri);
+      //   console.log('result', JSON.stringify(response));
+      //   const blob = await response.blob();
+      //   console.log('put result', puResult);
+      //   const puResult = await firebase.storage().ref().child(firebase.auth().currentUser.uid).put(blob);
+      // //-upload selected image to default bucket, naming with uid
+      // //- use get the url and set the photoURL
+
+      // const url = await firebase.storage().ref().child(firebase.auth().currentUser.uid).getDownloadURL();
+      // console.log("downlaod url", url);
+      // setPhotoURL(url);
+    }
+  };
 
 
   return (
-    <View style={styles.StyleSheet}>
+    <View style={styles.container}>
 
-      <TextInput style={{ height: 40, borderColor: "gray", borderWidth: 1 }}
+      <TextInput style={{ height: 40, borderColor: "gray", borderWidth: 1, fontSize: 24 , }}
         onChangeText={setDisplayName}
         placeholder="DisplayName"
         value={displayName} />
 
-      <TextInput style={{ height: 40, borderColor: "gray", borderWidth: 1 }}
-        onChangeText={setPhotoURL}
-        placeholder="PhotoURL"
-        value={photoURL} />
+      {photoURL !== "" && (
+        <Image style={{ width: 100, height: 100}} source={{ uri: photoURL }} />
+      )}
 
-        <Button title="Pick an Image" onPress={() => handlePickImge()}/>
-      <Button title="Save" onPress={() => handleSave()}/>
+      <Button title="Pick an Image" onPress={handlePickImge} />
+
+      <Button title="Save" onPress={handleSave} />
+
     
+      <MapView style={styles.mapstyle} initialRegion={{
+        latitude: 25.286106,
+        longitude: 51.534817,
+     
+      }}>
+
+      <MapView.Marker coordinate={{latitude: 25.286106,
+      longitude: 51.534817,}} 
+      title={"marker.title"}
+      description={"Home"}/>
+
+      </MapView>
+
     </View>
   )
 }
@@ -109,6 +136,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  mapstyle: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height,
+    flex: 1,
+
+
   },
   developmentModeText: {
     marginBottom: 20,
